@@ -158,7 +158,39 @@ public class AudioPlayer implements OnCompletionListener, OnPreparedListener, On
      * @param file              The name of the file
      */
     public void startRecording(String file) {
-       
+        String errorMessage;
+        switch (this.mode) {
+        case PLAY:
+            errorMessage = "AudioPlayer Error: Can't record in play mode.";
+            sendErrorStatus(MEDIA_ERR_ABORTED, errorMessage);
+            break;
+        case NONE:
+            this.audioFile = file;
+            this.recorder = new MediaRecorder();
+            this.recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+               this.recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+              this.recorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
+               this.recorder.setAudioEncodingBitRate(16*44100);
+               this.recorder.setAudioSamplingRate(44100);
+            this.tempFile = createAudioFilePath(null);
+            this.recorder.setOutputFile(this.tempFile);
+            try {
+                this.recorder.prepare();
+                this.recorder.start();
+                this.setState(STATE.MEDIA_RUNNING);
+                return;
+            } catch (IllegalStateException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            sendErrorStatus(MEDIA_ERR_ABORTED, null);
+            break;
+        case RECORD:
+            errorMessage = "AudioPlayer Error: Already recording.";
+            sendErrorStatus(MEDIA_ERR_ABORTED, errorMessage);
+        }
     }
 
     /**
